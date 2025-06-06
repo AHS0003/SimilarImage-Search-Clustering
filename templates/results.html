@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Résultats Clustering & KNN</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    h2 { margin-top: 20px; }
+    .cluster-row { margin-bottom: 15px; }
+    .cluster-row img { width: 150px; margin-right: 10px; border:1px solid #ccc; }
+    table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+    th, td { border: 1px solid #999; padding: 8px; text-align: center; }
+    th { background-color: #eee; }
+  </style>
+</head>
+<body>
+  <h1>Résultats Clustering & KNN</h1>
+
+  <!-- 1) Courbe du coude -->
+  <h2>1) Courbe du coude</h2>
+  <img src="{{ elbow_image }}" alt="Elbow Curve" style="max-width: 600px; border:1px solid #ccc;">
+
+  <!-- 2) Silhouette (si disponible) -->
+  <h2>2) Graphique de Silhouette</h2>
+  {% if silhouette_image %}
+    <img src="{{ silhouette_image }}" alt="Silhouette" style="max-width: 600px; border:1px solid #ccc;">
+    <p>Score moyen de silhouette : <strong>{{ silhouette_score }}</strong></p>
+  {% else %}
+    <p><em>Le score silhouette n'est pas disponible (k=1).</em></p>
+  {% endif %}
+
+  <!-- 3) Exemples d’images par cluster -->
+  <h2>3) Exemples d’images par cluster</h2>
+  {% for cl, rel_paths in samples_per_cluster.items() %}
+    <div class="cluster-row">
+      <h3>Cluster {{ cl }}</h3>
+      {% if rel_paths|length == 0 %}
+        <p><em>Aucune image dans ce cluster.</em></p>
+      {% else %}
+        {% for rel in rel_paths %}
+          <img src="{{ url_for('serve_dataset', filename=rel) }}" alt="Image cluster {{ cl }}">
+        {% endfor %}
+      {% endif %}
+    </div>
+  {% endfor %}
+
+  <!-- 4) Images les plus similaires (KNN) -->
+  <h2>4) Images les plus similaires (KNN)</h2>
+  <p><strong>Cluster prédit (vote majoritaire) pour la requête</strong> : {{ pred_knn_cluster }}</p>
+  <table>
+    <thead>
+      <tr>
+        <th>Image</th>
+        <th>Distance</th>
+        <th>Cluster</th>
+        <th>Classe</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in knn_results %}
+        <tr>
+          <td>
+            <img src="{{ url_for('serve_dataset', filename=item.rel_path) }}"
+                 alt="KNN image" style="width:100px; border:1px solid #ccc;">
+          </td>
+          <td>{{ item.distance }}</td>
+          <td>{{ item.cluster }}</td>
+          <td>{{ item.class }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <p><a href="{{ url_for('index') }}">← Revenir au formulaire</a></p>
+</body>
+</html>
