@@ -1,76 +1,163 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <title>Résultats Clustering & KNN</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    h2 { margin-top: 20px; }
-    .cluster-row { margin-bottom: 15px; }
-    .cluster-row img { width: 150px; margin-right: 10px; border:1px solid #ccc; }
-    table { border-collapse: collapse; width: 100%; margin-top: 10px; }
-    th, td { border: 1px solid #999; padding: 8px; text-align: center; }
-    th { background-color: #eee; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Résultats - Vision AI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <h1>Résultats Clustering & KNN</h1>
+    <div class="container">
+        <!-- Header -->
+        <header class="header results-header">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-brain"></i>
+                    <h1>Vision AI</h1>
+                </div>
+                <p class="subtitle">Résultats de l'analyse</p>
+            </div>
+            <div class="header-bg"></div>
+        </header>
 
-  <!-- 1) Courbe du coude -->
-  <h2>1) Courbe du coude</h2>
-  <img src="{{ elbow_image }}" alt="Elbow Curve" style="max-width: 600px; border:1px solid #ccc;">
+        <!-- Results Grid -->
+        <div class="results-grid">
+            
+            <!-- Elbow Curve -->
+            <section class="result-card">
+                <div class="card-header">
+                    <i class="fas fa-chart-line"></i>
+                    <h2>Courbe du Coude</h2>
+                    <p>Optimisation du nombre de clusters</p>
+                </div>
+                <div class="card-content">
+                    <div class="chart-container">
+                        <img src="{{ elbow_image }}" alt="Courbe du coude" class="chart-image">
+                    </div>
+                </div>
+            </section>
 
-  <!-- 2) Silhouette (si disponible) -->
-  <h2>2) Graphique de Silhouette</h2>
-  {% if silhouette_image %}
-    <img src="{{ silhouette_image }}" alt="Silhouette" style="max-width: 600px; border:1px solid #ccc;">
-    <p>Score moyen de silhouette : <strong>{{ silhouette_score }}</strong></p>
-  {% else %}
-    <p><em>Le score silhouette n'est pas disponible (k=1).</em></p>
-  {% endif %}
+            <!-- Silhouette Analysis -->
+            <section class="result-card">
+                <div class="card-header">
+                    <i class="fas fa-chart-area"></i>
+                    <h2>Analyse de Silhouette</h2>
+                    <p>Qualité du clustering</p>
+                </div>
+                <div class="card-content">
+                    {% if silhouette_image %}
+                        <div class="chart-container">
+                            <img src="{{ silhouette_image }}" alt="Silhouette" class="chart-image">
+                        </div>
+                        <div class="metric-badge">
+                            <span class="metric-label">Score moyen</span>
+                            <span class="metric-value">{{ silhouette_score }}</span>
+                        </div>
+                    {% else %}
+                        <div class="no-data">
+                            <i class="fas fa-info-circle"></i>
+                            <p>Score silhouette non disponible (k=1)</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </section>
+        </div>
 
-  <!-- 3) Exemples d’images par cluster -->
-  <h2>3) Exemples d’images par cluster</h2>
-  {% for cl, rel_paths in samples_per_cluster.items() %}
-    <div class="cluster-row">
-      <h3>Cluster {{ cl }}</h3>
-      {% if rel_paths|length == 0 %}
-        <p><em>Aucune image dans ce cluster.</em></p>
-      {% else %}
-        {% for rel in rel_paths %}
-          <img src="{{ url_for('serve_dataset', filename=rel) }}" alt="Image cluster {{ cl }}">
-        {% endfor %}
-      {% endif %}
+        <!-- Cluster Samples -->
+        <section class="result-card full-width">
+            <div class="card-header">
+                <i class="fas fa-layer-group"></i>
+                <h2>Échantillons par Cluster</h2>
+                <p>Exemples représentatifs de chaque groupe</p>
+            </div>
+            <div class="card-content">
+                <div class="clusters-container">
+                    {% for cl, rel_paths in samples_per_cluster.items() %}
+                        <div class="cluster-group">
+                            <div class="cluster-header">
+                                <div class="cluster-badge">{{ cl }}</div>
+                                <h3>Cluster {{ cl }}</h3>
+                            </div>
+                            <div class="cluster-images">
+                                {% if rel_paths|length == 0 %}
+                                    <div class="no-images">
+                                        <i class="fas fa-image"></i>
+                                        <p>Aucune image</p>
+                                    </div>
+                                {% else %}
+                                    {% for rel in rel_paths %}
+                                        <div class="image-item">
+                                            <img src="{{ url_for('serve_dataset', filename=rel) }}" alt="Cluster {{ cl }}" loading="lazy">
+                                        </div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+
+        <!-- KNN Results -->
+        <section class="result-card full-width">
+            <div class="card-header">
+                <i class="fas fa-search"></i>
+                <h2>Images Similaires (KNN)</h2>
+                <p>Classification par plus proches voisins</p>
+            </div>
+            <div class="card-content">
+                <div class="prediction-summary">
+                    <div class="prediction-badge">
+                        <span class="prediction-label">Cluster prédit</span>
+                        <span class="prediction-value">{{ pred_knn_cluster }}</span>
+                    </div>
+                </div>
+                
+                <div class="knn-table-container">
+                    <table class="knn-table">
+                        <thead>
+                            <tr>
+                                <th>Image</th>
+                                <th>Distance</th>
+                                <th>Cluster</th>
+                                <th>Classe</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in knn_results %}
+                                <tr class="knn-row">
+                                    <td class="image-cell">
+                                        <div class="knn-image-container">
+                                            <img src="{{ url_for('serve_dataset', filename=item.rel_path) }}" 
+                                                 alt="Image similaire" loading="lazy">
+                                        </div>
+                                    </td>
+                                    <td class="distance-cell">
+                                        <span class="distance-value">{{ "%.3f"|format(item.distance) }}</span>
+                                    </td>
+                                    <td class="cluster-cell">
+                                        <span class="cluster-tag">{{ item.cluster }}</span>
+                                    </td>
+                                    <td class="class-cell">
+                                        <span class="class-name">{{ item.class }}</span>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Back Button -->
+        <div class="back-section">
+            <a href="{{ url_for('index') }}" class="back-btn">
+                <i class="fas fa-arrow-left"></i>
+                <span>Nouvelle Analyse</span>
+            </a>
+        </div>
     </div>
-  {% endfor %}
-
-  <!-- 4) Images les plus similaires (KNN) -->
-  <h2>4) Images les plus similaires (KNN)</h2>
-  <p><strong>Cluster prédit (vote majoritaire) pour la requête</strong> : {{ pred_knn_cluster }}</p>
-  <table>
-    <thead>
-      <tr>
-        <th>Image</th>
-        <th>Distance</th>
-        <th>Cluster</th>
-        <th>Classe</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for item in knn_results %}
-        <tr>
-          <td>
-            <img src="{{ url_for('serve_dataset', filename=item.rel_path) }}"
-                 alt="KNN image" style="width:100px; border:1px solid #ccc;">
-          </td>
-          <td>{{ item.distance }}</td>
-          <td>{{ item.cluster }}</td>
-          <td>{{ item.class }}</td>
-        </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-
-  <p><a href="{{ url_for('index') }}">← Revenir au formulaire</a></p>
 </body>
 </html>

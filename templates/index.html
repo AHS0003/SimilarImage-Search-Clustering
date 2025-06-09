@@ -2,111 +2,195 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Interface Clustering + KNN</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-        }
-        h1 { margin-bottom: 10px; }
-        label { display: block; margin-top: 8px; }
-        input[type="text"], input[type="number"], input[type="file"] {
-            width: 300px;
-            padding: 5px;
-        }
-        .weight-input {
-            width: 80px;
-        }
-        .submit-btn {
-            margin-top: 15px;
-            padding: 10px 20px;
-            font-size: 1rem;
-        }
-        fieldset {
-            margin-bottom: 15px;
-            padding: 10px;
-        }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Image Clustering - Floating Clusters</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 </head>
 <body>
-    <h1>Clustering d’images & Classification KNN</h1>
+    <!-- Navigation Header -->
+    <header class="nav-header">
+        <div class="nav-container">
+            <button class="back-btn" onclick="goBack()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+                Back
+            </button>
+            
+            <div class="user-info">
+                <div class="user-avatar">
+                    <div class="avatar-gradient"></div>
+                    <span>AI</span>
+                </div>
+                <span class="username">image-analyst</span>
+            </div>
+            
+            <div class="project-stats">
+                <div class="stat-item">
+                    <span class="stat-icon">🔍</span>
+                    <span class="stat-text">Image Clustering</span>
+                </div>
+                <div class="fork-count">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="18" r="3"/>
+                        <circle cx="6" cy="6" r="3"/>
+                        <circle cx="18" cy="6" r="3"/>
+                        <path d="M18 9v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9"/>
+                        <path d="M12 12v3"/>
+                    </svg>
+                    4.8K Clusters
+                </div>
+            </div>
+            
+            <button class="open-btn" onclick="openInNewTab()">
+                <span>Open in v0</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                    <polyline points="15,3 21,3 21,9"/>
+                    <line x1="10" y1="14" x2="21" y2="3"/>
+                </svg>
+            </button>
+        </div>
+    </header>
 
-    <!--
-      Attention : l'URL action doit pointer sur la route '/process' (POST),
-      pas sur 'index'.
-    -->
-    <form action="{{ url_for('process') }}" method="post" enctype="multipart/form-data">
+    <!-- Interactive Background with Floating Clusters -->
+    <div class="floating-clusters-bg">
+        <canvas id="clusters-canvas"></canvas>
+        
+        <!-- Floating Image Clusters -->
+        <div class="floating-clusters" id="floating-clusters">
+            <!-- Clusters will be generated dynamically -->
+        </div>
+        
+        <!-- Main Content Overlay -->
+        <div class="main-overlay">
+            <div class="hero-section">
+                <h1 class="hero-title">
+                    <span class="title-gradient">Floating</span>
+                    <span class="title-gradient">Clusters</span>
+                </h1>
+                <p class="hero-subtitle">Découvrez vos images organisées en clusters intelligents</p>
+                
+                <button class="explore-btn" onclick="exploreMode()">
+                    <span>Explorer les Clusters</span>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
 
-        <fieldset>
-            <legend><strong>1) Choix des descripteurs et poids</strong></legend>
+    <!-- Configuration Panel (Hidden initially) -->
+    <div class="config-panel" id="config-panel" style="display: none;">
+        <div class="panel-header">
+            <h2>Configuration du Clustering</h2>
+            <button class="close-panel" onclick="closeConfig()">×</button>
+        </div>
+        
+        <div class="config-content">
+            <!-- Quick Upload -->
+            <div class="quick-upload">
+                <div class="upload-zone" id="upload-zone">
+                    <div class="upload-icon">📁</div>
+                    <p>Glissez vos images ici</p>
+                    <input type="file" id="image-files" multiple accept="image/*" style="display: none;">
+                    <button class="upload-btn" onclick="selectImages()">Sélectionner Images</button>
+                </div>
+            </div>
+            
+            <!-- Clustering Parameters -->
+            <div class="param-section">
+                <h3>Paramètres de Clustering</h3>
+                <div class="param-grid">
+                    <div class="param-item">
+                        <label>Nombre de clusters</label>
+                        <div class="param-control">
+                            <input type="range" id="cluster-count" min="2" max="10" value="5" class="param-slider">
+                            <span class="param-value">5</span>
+                        </div>
+                    </div>
+                    
+                    <div class="param-item">
+                        <label>Sensibilité</label>
+                        <div class="param-control">
+                            <input type="range" id="sensitivity" min="0.1" max="1" step="0.1" value="0.5" class="param-slider">
+                            <span class="param-value">0.5</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Descriptors -->
+            <div class="descriptors-section">
+                <h3>Descripteurs</h3>
+                <div class="descriptor-toggles">
+                    <label class="toggle-item">
+                        <input type="checkbox" checked>
+                        <span class="toggle-slider"></span>
+                        <span class="toggle-label">Couleur</span>
+                    </label>
+                    <label class="toggle-item">
+                        <input type="checkbox" checked>
+                        <span class="toggle-slider"></span>
+                        <span class="toggle-label">Forme</span>
+                    </label>
+                    <label class="toggle-item">
+                        <input type="checkbox" checked>
+                        <span class="toggle-slider"></span>
+                        <span class="toggle-label">Texture</span>
+                    </label>
+                    <label class="toggle-item">
+                        <input type="checkbox" checked>
+                        <span class="toggle-slider"></span>
+                        <span class="toggle-label">VGG19</span>
+                    </label>
+                </div>
+            </div>
+            
+            <button class="process-btn" onclick="startClustering()">
+                <span class="btn-icon">🚀</span>
+                Lancer le Clustering
+            </button>
+        </div>
+    </div>
 
-            <!-- Les checkboxes doivent s'appeler "descriptor" pour getlist('descriptor') -->
-            <label>
-                <input type="checkbox" name="descriptor" value="color" checked>
-                Utiliser Descripteur Couleur
-                &nbsp;&nbsp;
-                Poids 
-                <input type="number" name="weight_color" class="weight-input"
-                       value="0.20" step="0.01" min="0" max="1">
-            </label>
+    <!-- Cluster Detail Modal -->
+    <div class="cluster-modal" id="cluster-modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">Cluster Details</h3>
+                <button class="close-modal" onclick="closeModal()">×</button>
+            </div>
+            <div class="modal-body" id="modal-body">
+                <!-- Cluster details will be populated here -->
+            </div>
+        </div>
+    </div>
 
-            <label>
-                <input type="checkbox" name="descriptor" value="shape" checked>
-                Utiliser Descripteur Forme
-                &nbsp;&nbsp;
-                Poids 
-                <input type="number" name="weight_shape" class="weight-input"
-                       value="0.15" step="0.01" min="0" max="1">
-            </label>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loading-overlay" style="display: none;">
+        <div class="loading-content">
+            <div class="loading-animation">
+                <div class="loading-clusters">
+                    <div class="loading-cluster"></div>
+                    <div class="loading-cluster"></div>
+                    <div class="loading-cluster"></div>
+                </div>
+            </div>
+            <h3>Analyse en cours...</h3>
+            <p>Clustering de vos images avec l'IA</p>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+        </div>
+    </div>
 
-            <label>
-                <input type="checkbox" name="descriptor" value="texture" checked>
-                Utiliser Descripteur Texture
-                &nbsp;&nbsp;
-                Poids 
-                <input type="number" name="weight_texture" class="weight-input"
-                       value="0.20" step="0.01" min="0" max="1">
-            </label>
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
 
-            <label>
-                <input type="checkbox" name="descriptor" value="vgg" checked>
-                Utiliser Descripteur VGG19
-                &nbsp;&nbsp;
-                Poids 
-                <input type="number" name="weight_vgg" class="weight-input"
-                       value="0.45" step="0.01" min="0" max="1">
-            </label>
-        </fieldset>
-
-        <fieldset>
-            <legend><strong>2) Hyperparamètres KMeans & KNN</strong></legend>
-            <label>
-                Nombre de clusters (k pour KMeans) :
-                <!-- doit être "k_clusters" pour correspondre à app.py -->
-                <input type="number" name="k_clusters" value="9" min="2" max="20" step="1">
-            </label>
-            <label>
-                Nombre de voisins similaires (KNN) :
-                <!-- "n_neighbors" : correct dans app.py -->
-                <input type="number" name="n_neighbors" value="11" min="1" max="20" step="1">
-            </label>
-        </fieldset>
-
-        <fieldset>
-            <legend><strong>3) Dossier images et image requête</strong></legend>
-            <label>
-                Chemin complet du dossier contenant les images (sur le serveur) :
-                <!-- doit être "img_dir" pour correspondre à app.py -->
-                <input type="text" name="img_dir" placeholder="Ex : C:\Images\training_set" required>
-            </label>
-            <label>
-                Image requête (upload depuis votre poste) :
-                <!-- "query_image" correspond à app.py -->
-                <input type="file" name="query_image" accept="image/*" required>
-            </label>
-        </fieldset>
-
-        <button type="submit" class="submit-btn">Lancer le traitement</button>
-    </form>
+    <script src="main.js"></script>
 </body>
 </html>
