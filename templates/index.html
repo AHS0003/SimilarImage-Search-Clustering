@@ -3,194 +3,103 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Image Clustering - Floating Clusters</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <title>Analyse d'Images Intelligente</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
-    <!-- Navigation Header -->
-    <header class="nav-header">
-        <div class="nav-container">
-            <button class="back-btn" onclick="goBack()">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M19 12H5M12 19l-7-7 7-7"/>
-                </svg>
-                Back
-            </button>
-            
-            <div class="user-info">
-                <div class="user-avatar">
-                    <div class="avatar-gradient"></div>
-                    <span>AI</span>
-                </div>
-                <span class="username">image-analyst</span>
-            </div>
-            
-            <div class="project-stats">
-                <div class="stat-item">
-                    <span class="stat-icon">🔍</span>
-                    <span class="stat-text">Image Clustering</span>
-                </div>
-                <div class="fork-count">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="18" r="3"/>
-                        <circle cx="6" cy="6" r="3"/>
-                        <circle cx="18" cy="6" r="3"/>
-                        <path d="M18 9v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9"/>
-                        <path d="M12 12v3"/>
-                    </svg>
-                    4.8K Clusters
-                </div>
-            </div>
-            
-            <button class="open-btn" onclick="openInNewTab()">
-                <span>Open in v0</span>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-                    <polyline points="15,3 21,3 21,9"/>
-                    <line x1="10" y1="14" x2="21" y2="3"/>
-                </svg>
-            </button>
-        </div>
-    </header>
+    <div class="container">
+        <header>
+            <h1>Analyse d'Images Intelligente</h1>
+            <p class="subtitle">Découvrez les similarités et patterns dans vos images</p>
+        </header>
 
-    <!-- Interactive Background with Floating Clusters -->
-    <div class="floating-clusters-bg">
-        <canvas id="clusters-canvas"></canvas>
-        
-        <!-- Floating Image Clusters -->
-        <div class="floating-clusters" id="floating-clusters">
-            <!-- Clusters will be generated dynamically -->
-        </div>
-        
-        <!-- Main Content Overlay -->
-        <div class="main-overlay">
-            <div class="hero-section">
-                <h1 class="hero-title">
-                    <span class="title-gradient">Floating</span>
-                    <span class="title-gradient">Clusters</span>
-                </h1>
-                <p class="hero-subtitle">Découvrez vos images organisées en clusters intelligents</p>
-                
-                <button class="explore-btn" onclick="exploreMode()">
-                    <span>Explorer les Clusters</span>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M5 12h14M12 5l7 7-7 7"/>
-                    </svg>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Configuration Panel (Hidden initially) -->
-    <div class="config-panel" id="config-panel" style="display: none;">
-        <div class="panel-header">
-            <h2>Configuration du Clustering</h2>
-            <button class="close-panel" onclick="closeConfig()">×</button>
-        </div>
-        
-        <div class="config-content">
-            <!-- Quick Upload -->
-            <div class="quick-upload">
-                <div class="upload-zone" id="upload-zone">
-                    <div class="upload-icon">📁</div>
-                    <p>Glissez vos images ici</p>
-                    <input type="file" id="image-files" multiple accept="image/*" style="display: none;">
-                    <button class="upload-btn" onclick="selectImages()">Sélectionner Images</button>
-                </div>
-            </div>
-            
-            <!-- Clustering Parameters -->
-            <div class="param-section">
-                <h3>Paramètres de Clustering</h3>
-                <div class="param-grid">
-                    <div class="param-item">
-                        <label>Nombre de clusters</label>
-                        <div class="param-control">
-                            <input type="range" id="cluster-count" min="2" max="10" value="5" class="param-slider">
-                            <span class="param-value">5</span>
+        <main>
+            <form action="{{ url_for('process') }}" method="post" enctype="multipart/form-data" class="analysis-form">
+                <div class="form-section">
+                    <h2>1. Sélectionnez vos descripteurs</h2>
+                    <div class="descriptors-grid">
+                        <div class="descriptor-card">
+                            <input type="checkbox" id="color" name="descriptor" value="color">
+                            <label for="color">
+                                <span class="icon">🎨</span>
+                                <span class="name">Histogramme RGB</span>
+                            </label>
+                            <input type="number" name="weight_color" value="1.0" step="0.1" min="0" class="weight-input">
                         </div>
-                    </div>
-                    
-                    <div class="param-item">
-                        <label>Sensibilité</label>
-                        <div class="param-control">
-                            <input type="range" id="sensitivity" min="0.1" max="1" step="0.1" value="0.5" class="param-slider">
-                            <span class="param-value">0.5</span>
+                        <div class="descriptor-card">
+                            <input type="checkbox" id="shape" name="descriptor" value="shape">
+                            <label for="shape">
+                                <span class="icon">📐</span>
+                                <span class="name">Moments de Zernike</span>
+                            </label>
+                            <input type="number" name="weight_shape" value="1.0" step="0.1" min="0" class="weight-input">
+                        </div>
+                        <div class="descriptor-card">
+                            <input type="checkbox" id="texture" name="descriptor" value="texture">
+                            <label for="texture">
+                                <span class="icon">🧶</span>
+                                <span class="name">SFTA</span>
+                            </label>
+                            <input type="number" name="weight_texture" value="1.0" step="0.1" min="0" class="weight-input">
+                        </div>
+                        <div class="descriptor-card">
+                            <input type="checkbox" id="vgg" name="descriptor" value="vgg">
+                            <label for="vgg">
+                                <span class="icon">🤖</span>
+                                <span class="name">VGG19</span>
+                            </label>
+                            <input type="number" name="weight_vgg" value="1.0" step="0.1" min="0" class="weight-input">
                         </div>
                     </div>
                 </div>
-            </div>
-            
-            <!-- Descriptors -->
-            <div class="descriptors-section">
-                <h3>Descripteurs</h3>
-                <div class="descriptor-toggles">
-                    <label class="toggle-item">
-                        <input type="checkbox" checked>
-                        <span class="toggle-slider"></span>
-                        <span class="toggle-label">Couleur</span>
-                    </label>
-                    <label class="toggle-item">
-                        <input type="checkbox" checked>
-                        <span class="toggle-slider"></span>
-                        <span class="toggle-label">Forme</span>
-                    </label>
-                    <label class="toggle-item">
-                        <input type="checkbox" checked>
-                        <span class="toggle-slider"></span>
-                        <span class="toggle-label">Texture</span>
-                    </label>
-                    <label class="toggle-item">
-                        <input type="checkbox" checked>
-                        <span class="toggle-slider"></span>
-                        <span class="toggle-label">VGG19</span>
-                    </label>
+
+                <div class="form-section">
+                    <h2>2. Paramètres d'analyse</h2>
+                    <div class="parameters-grid">
+                        <div class="parameter-group">
+                            <label for="k_clusters">Nombre de clusters (k):</label>
+                            <input type="number" id="k_clusters" name="k_clusters" value="3" min="2" required>
+                        </div>
+                        <div class="parameter-group">
+                            <label for="n_neighbors">Nombre de voisins:</label>
+                            <input type="number" id="n_neighbors" name="n_neighbors" value="5" min="1" required>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            
-            <button class="process-btn" onclick="startClustering()">
-                <span class="btn-icon">🚀</span>
-                Lancer le Clustering
-            </button>
-        </div>
-    </div>
 
-    <!-- Cluster Detail Modal -->
-    <div class="cluster-modal" id="cluster-modal" style="display: none;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="modal-title">Cluster Details</h3>
-                <button class="close-modal" onclick="closeModal()">×</button>
-            </div>
-            <div class="modal-body" id="modal-body">
-                <!-- Cluster details will be populated here -->
-            </div>
-        </div>
-    </div>
-
-    <!-- Loading Overlay -->
-    <div class="loading-overlay" id="loading-overlay" style="display: none;">
-        <div class="loading-content">
-            <div class="loading-animation">
-                <div class="loading-clusters">
-                    <div class="loading-cluster"></div>
-                    <div class="loading-cluster"></div>
-                    <div class="loading-cluster"></div>
+                <div class="form-section">
+                    <h2>3. Sélection des images</h2>
+                    <div class="file-inputs">
+                        <div class="input-group">
+                            <label for="img_dir">Dossier d'images:</label>
+                            <input type="text" id="img_dir" name="img_dir" required placeholder="Chemin vers le dossier d'images">
+                        </div>
+                        <div class="input-group">
+                            <label for="query_image">Image requête:</label>
+                            <input type="file" id="query_image" name="query_image" accept=".jpg,.jpeg,.png,.bmp,.tiff,.gif" required>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            <h3>Analyse en cours...</h3>
-            <p>Clustering de vos images avec l'IA</p>
-            <div class="progress-bar">
-                <div class="progress-fill" id="progress-fill"></div>
-            </div>
-        </div>
+
+                <button type="submit" class="submit-btn">Lancer l'analyse</button>
+            </form>
+        </main>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="flash-message {{ category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
     </div>
 
-    <!-- Toast Container -->
-    <div class="toast-container" id="toast-container"></div>
-
-    <script src="main.js"></script>
+    <div class="background-animation"></div>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 </body>
 </html>

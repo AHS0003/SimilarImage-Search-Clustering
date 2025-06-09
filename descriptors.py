@@ -19,7 +19,7 @@ from collections import Counter
 class Color:
     def histogram(self, path):
         img = cv2.imread(path)
-        if img is None:
+        if img is None:  
             return np.zeros(512)
         rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         hist = cv2.calcHist([rgb], [0, 1, 2], None, [8, 8, 8], [0, 256] * 3)
