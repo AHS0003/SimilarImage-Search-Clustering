@@ -1,80 +1,114 @@
-# 🔍 Recherche d'Images Similaires & Clustering (CBIR)
+# 🔍 Similar Image Search & Clustering (CBIR)
 
 ![Python](https://img.shields.io/badge/Python-3.8%2B-blue?style=for-the-badge&logo=python&logoColor=white)
 ![Flask](https://img.shields.io/badge/Flask-Web_App-green?style=for-the-badge&logo=flask&logoColor=white)
 ![TensorFlow](https://img.shields.io/badge/TensorFlow-VGG19-orange?style=for-the-badge&logo=tensorflow&logoColor=white)
 ![OpenCV](https://img.shields.io/badge/OpenCV-Computer_Vision-red?style=for-the-badge&logo=opencv&logoColor=white)
 
-> **Projet de Machine Learning & Vision par Ordinateur**
-> Une application web complète pour l'analyse, le clustering et la recherche d'images similaires, comparant des descripteurs classiques (Couleur, Forme, Texture) et le Deep Learning (VGG19).
+> **Machine Learning & Computer Vision Project**  
+> A complete web application for image analysis, clustering, and similar image search, comparing classical descriptors (Color, Shape, Texture) with Deep Learning (VGG19).
 
 ---
 
-## 📝 Description du Projet
+## 📝 Project Description
 
-Ce projet implémente un pipeline de traitement d'images capable de structurer une base de données visuelle et de retrouver des images similaires à une requête (CBIR - Content-Based Image Retrieval).
+This project implements an image processing pipeline capable of structuring a visual database and retrieving images similar to a query (CBIR - Content-Based Image Retrieval).
 
-L'objectif principal est de comparer l'efficacité des méthodes d'extraction de caractéristiques traditionnelles face aux réseaux de neurones convolutionnels (CNN) via une interface web interactive.
-
-### ✨ Fonctionnalités Clés
-
-* **Extraction de caractéristiques (Feature Extraction) :**
-    * 🎨 **Couleur :** Histogramme RGB (Distribution chromatique).
-    * 📐 **Forme :** Moments de Zernike (Invariants par rotation).
-    * 🧱 **Texture :** SFTA (Segmentation-based Fractal Texture Analysis).
-    * 🧠 **Deep Learning :** Features extraites via **VGG19** (Transfer Learning).
-* **Clustering Non-Supervisé :**
-    * Utilisation de l'algorithme **K-Means** pour grouper les images.
-    * Optimisation du nombre de clusters ($k$) via la **méthode du Coude (Elbow Method)**.
-    * Évaluation de la qualité des clusters via le **Score de Silhouette**.
-* **Recherche de Similarité :**
-    * Algorithme **KNN** (K-Nearest Neighbors) pour identifier les images les plus proches d'une requête.
-* **Interface Web Interactive :**
-    * Dashboard complet permettant de configurer l'analyse, visualiser les courbes de performance et explorer les résultats.
+The main objective is to compare the effectiveness of traditional feature extraction methods with convolutional neural networks (CNNs) through an interactive web interface.
 
 ---
 
-## 🛠️ Stack Technique
+## ✨ Key Features
 
-Ce projet a été réalisé en utilisant le langage **Python** et les bibliothèques suivantes :
+### 🔎 Feature Extraction
+- 🎨 **Color:** RGB Histogram (color distribution).
+- 📐 **Shape:** Zernike Moments (rotation invariant).
+- 🧱 **Texture:** SFTA (Segmentation-based Fractal Texture Analysis).
+- 🧠 **Deep Learning:** Features extracted using **VGG19** (Transfer Learning).
 
-| Domaine | Technologies Utilisées |
+### 📊 Unsupervised Clustering
+- **K-Means** algorithm for grouping images.
+- Optimization of the number of clusters (*k*) using the **Elbow Method**.
+- Cluster quality evaluation using the **Silhouette Score**.
+
+### 🔍 Similarity Search
+- **KNN (K-Nearest Neighbors)** algorithm to identify the closest images to a query.
+
+### 🌐 Interactive Web Interface
+- Complete dashboard to configure analysis.
+- Visualization of performance curves.
+- Interactive exploration of clustering and similarity results.
+
+---
+
+## 🛠️ Tech Stack
+
+This project was developed using **Python** and the following libraries:
+
+| Domain | Technologies Used |
 | :--- | :--- |
-| **Backend Web** | `Flask` (API REST) |
-| **Frontend** | `HTML5`, `CSS3`, `JavaScript`, `Chart.js` (Visualisation) |
-| **Traitement d'Image** | `OpenCV` (cv2), `Mahotas` |
+| **Web Backend** | `Flask` (REST API) |
+| **Frontend** | `HTML5`, `CSS3`, `JavaScript`, `Chart.js` (Visualization) |
+| **Image Processing** | `OpenCV` (cv2), `Mahotas` |
 | **Machine Learning** | `Scikit-learn` (K-Means, KNN) |
-| **Deep Learning** | `TensorFlow` / `Keras` (Modèle VGG19) |
-| **Calcul & Données** | `NumPy`, `Matplotlib` |
+| **Deep Learning** | `TensorFlow` / `Keras` (VGG19 Model) |
+| **Computation & Data** | `NumPy`, `Matplotlib` |
 
 ---
 
-## 📂 Base de Données
+## 📂 Dataset
 
-Le système a été entraîné et testé sur une base de données organisée en **12 classes** distinctes, totalisant environ 1200 images :
+The system was trained and tested on a dataset organized into **12 distinct classes**, totaling approximately 1200 images:
 
-* 🚲 Bike (Vélo)
-* 🚌 Bus
-* 🐱 Cat (Chat)
-* 🦖 Dinosaurs (Dinosaures)
-* 🐶 Dog (Chien)
-* 🐘 Elephants (Éléphants)
-* 🌸 Flowers (Fleurs)
-* 🍔 Foods (Nourriture)
-* 🐎 Horses (Chevaux)
-* 🏛️ Monuments
-* 🏔️ Mountains & Snow (Montagnes)
-* ⌚ Watch (Montres)
+- 🚲 Bike  
+- 🚌 Bus  
+- 🐱 Cat  
+- 🦖 Dinosaurs  
+- 🐶 Dog  
+- 🐘 Elephants  
+- 🌸 Flowers  
+- 🍔 Foods  
+- 🐎 Horses  
+- 🏛️ Monuments  
+- 🏔️ Mountains & Snow  
+- ⌚ Watch  
 
 ---
 
-## 🚀 Installation et Utilisation
+## 🚀 Installation & Usage
 
-### Prérequis
-* Python 3.8+
-* pip
+### Prerequisites
+- Python 3.8+
+- pip
 
-### 1. Cloner le projet
+### 1️⃣ Clone the repository
 ```bash
-git clone [https://github.com/VOTRE_USERNAME/NOM_DU_PROJET.git](https://github.com/VOTRE_USERNAME/NOM_DU_PROJET.git)
-cd NOM_DU_PROJET
+git clone https://github.com/YOUR_USERNAME/PROJECT_NAME.git
+cd PROJECT_NAME
+```
+
+### 2️⃣ Install dependencies
+```bash
+pip install -r requirements.txt
+```
+
+### 3️⃣ Run the application
+```bash
+python app.py
+```
+
+### 4️⃣ Open in your browser
+```
+http://127.0.0.1:5000/
+```
+
+---
+
+## 🎯 Project Goals
+
+- Compare classical image descriptors vs Deep Learning features
+- Evaluate clustering performance using quantitative metrics
+- Implement a full CBIR system
+- Develop an interactive ML-powered web dashboard
+
+---
