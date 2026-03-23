@@ -96,14 +96,6 @@ pip install -r requirements.txt
 ```bash
 python app.py
 ```
-
-### 4️⃣ Open in your browser
-```
-http://127.0.0.1:5000/
-```
-
----
-
 ## 🎯 Project Goals
 
 - Compare classical image descriptors vs Deep Learning features
