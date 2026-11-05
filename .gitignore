@@ -1,4 +1,9 @@
-venv/ 
-static/outputs/
+venv/
+.venv/
 __pycache__/
-
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+results/*
+!results/README.md
+datasets/

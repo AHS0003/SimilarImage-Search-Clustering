@@ -1,0 +1,1 @@
+"""Classical Image Retrieval & Clustering."""
