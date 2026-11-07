@@ -4,6 +4,99 @@ Application Python de recherche d’images par le contenu (**CBIR**) et de clust
 
 Cette version expérimentale utilise K-Means et les voisins euclidiens. Flask, VGG19 et TensorFlow ont été retirés.
 
+## Comprendre les descripteurs simplement
+
+Un **descripteur** transforme une image en une liste de nombres appelée **vecteur**. Chaque famille décrit un aspect différent :
+
+| Famille | Question posée à l’image | Taille |
+|---|---|---:|
+| Histogramme RGB | Quelles couleurs sont présentes, et en quelle quantité ? | 512 |
+| Zernike | Quelle est la forme du premier plan obtenu par seuillage ? | 25 |
+| SFTA | Comment les frontières des régions de niveaux de gris sont-elles structurées ? | 45 |
+
+### Couleur : compter les combinaisons RGB
+
+Un pixel contient trois valeurs : rouge, vert et bleu, chacune entre 0 et 255. On regroupe chaque canal en 8 intervalles :
+
+$q(v)=\lfloor v/32\rfloor.$
+
+Par exemple, le pixel $(240,30,20)$ devient $(7,0,0)$. On compte les pixels dans chaque combinaison :
+
+$H(i,j,k)=\#\{p:q(R_p)=i,\ q(G_p)=j,\ q(B_p)=k\}.$
+
+Le symbole $\#$ signifie « nombre d’éléments ». Avec 8 possibilités par canal, il existe $8\times8\times8=512$ combinaisons. Le vecteur contient donc **512 nombres**.
+
+Ce descripteur conserve les proportions de couleurs après normalisation, mais pas leur position : une image rouge à gauche et bleue à droite peut avoir le même histogramme que l’image inverse.
+
+### Forme : mesurer la ressemblance avec des motifs de Zernike
+
+Le code construit d’abord un masque binaire : premier plan à 1, fond à 0. Le seuil est choisi par Otsu ; une heuristique sur le bord décide si le masque doit être inversé. Le masque est recadré, redimensionné en conservant ses proportions, centré et rapporté à un disque unité.
+
+Les motifs de Zernike sont des fonctions définies dans ce disque :
+
+$V_n^m(\rho,\theta)=R_n^m(\rho)e^{im\theta}.$
+
+$\rho$ est la distance au centre et $\theta$ l’angle. $R_n^m$ décrit les variations radiales ; le terme exponentiel décrit les variations angulaires. Un moment mesure la contribution d’un motif à la forme :
+
+$A_n^m=\frac{n+1}{\pi}\sum_{\rho_p\leq1}\widetilde f_p R_n^m(\rho_p)e^{-im\theta_p}.$
+
+Dans Mahotas, les poids $\widetilde f_p$ correspondent aux intensités positives normalisées par leur somme. Pour le masque binaire, chaque pixel du premier plan reçoit donc le même poids.
+
+Le vecteur conserve **le module** $|A_n^m|$, c’est-à-dire la grandeur du nombre complexe. Une rotation idéale change la phase du moment, mais conserve ce module. Sur des pixels, l’invariance reste approximative.
+
+Au degré maximal 8, les indices admissibles donnent :
+
+$D_Z=\sum_{n=0}^{8}\left(\lfloor n/2\rfloor+1\right)=25.$
+
+Le vecteur contient donc **25 nombres**. Il décrit le masque obtenu, ce qui rend la qualité du seuillage essentielle. Une image uniforme produit un vecteur nul.
+
+### Texture : analyser les frontières avec SFTA
+
+SFTA travaille sur l’image en niveaux de gris $G$. Otsu récursif fournit 8 seuils ordonnés $t_1,\ldots,t_8$.
+
+Le code crée 8 masques au-dessus des seuils et 7 masques entre seuils voisins :
+
+$B_i^+(p)=\mathbf1[G(p)>t_i],\qquad
+B_i^{int}(p)=\mathbf1[t_i<G(p)<t_{i+1}].$
+
+$\mathbf1$ vaut 1 si la condition est vraie, 0 sinon. Cela donne **15 masques**. Pour chacun, on extrait sa frontière $\partial B$ et trois valeurs :
+
+$s(B)=[\widehat D(\partial B),\ \mu_{\partial B},\ |\partial B|].$
+
+- $\widehat D$ : estimation de la complexité de la frontière par box-counting.
+- $\mu_{\partial B}$ : moyenne des niveaux de gris sur cette frontière.
+- $|\partial B|$ : nombre de pixels de frontière, et non aire du masque.
+
+Pour le box-counting, on recouvre la frontière avec des carrés de côté $\epsilon$ et on compte ceux qui sont occupés, $N(\epsilon)$. On estime la pente de $\log N(\epsilon)$ en fonction de $\log(1/\epsilon)$. C’est une estimation à résolution finie, pas une preuve de structure fractale.
+
+La taille finale est donc :
+
+$15\times3=45.$
+
+Une frontière vide donne trois zéros. Les seuils peuvent se répéter pour une image pauvre en niveaux de gris.
+
+### Normaliser, combiner et comparer
+
+Avant de comparer les images, chaque famille est normalisée séparément :
+
+$\widehat f=\frac{f}{\sqrt{\sum_j f_j^2}}.$
+
+Un vecteur nul reste nul. Exemple : $[3,4]$ devient $[0{,}6,0{,}8]$, car sa norme vaut 5. Cette opération agit sur les nombres du descripteur ; le redimensionnement agit sur les pixels.
+
+La fusion assemble les trois blocs :
+
+$F=[w_c\widehat h,\ w_z\widehat z,\ w_t\widehat s].$
+
+Avec les trois familles, la taille vaut **512 + 25 + 45 = 582**. Les poids valent 1 par défaut. L2 par bloc ne met pas séparément à la même échelle toutes les composantes SFTA : les comptages peuvent encore dominer les autres statistiques de ce bloc.
+
+La recherche par vecteurs utilise la distance euclidienne :
+
+$d(I,J)=\sqrt{\sum_j(F_j(I)-F_j(J))^2}.$
+
+Une petite distance signifie que les descripteurs sont proches. Cela ne garantit pas que les images représentent le même objet. L’autre stratégie, RRF, fusionne les rangs obtenus par famille ; son score n’est pas une distance.
+
+Les sections suivantes précisent les conventions mathématiques et les détails de l’implémentation.
+
 ## Sommaire
 
 1. Objectif et architecture
@@ -428,6 +521,24 @@ Les rangs commencent à 1 et le score le plus grand est le meilleur. **Le score 
 
 ## 8. Évaluation
 
+### État de l’évaluation réelle
+
+**Aucun score réel n’est disponible dans ce dépôt.** Lors de la vérification du 7 novembre 2026, l’arbre de la branche principale ne contenait ni le dataset annoncé ni des rapports d’évaluation réelle. L’effectif approximatif de 1 200 images et les 12 catégories restent à vérifier sur les fichiers sources. Les essais synthétiques ne permettent pas de conclure sur la qualité réelle de recherche ou de clustering.
+
+Le code définit une partition 60/20/20 reproductible, après filtrage des fichiers illisibles et des doublons binaires. La conformité des partitions du dataset réel ne peut être confirmée avant exécution et inspection du manifeste.
+
+Avant d’interpréter les résultats réels :
+
+- Vérifier les effectifs par classe et par partition, les exclusions, la disjonction des chemins et des hashes, ainsi que l’absence de hashes manquants.
+- Examiner les quasi-doublons, réencodages, séries du même objet et éventuels labels contradictoires. SHA256 ne détecte que les fichiers identiques octet par octet ; des images apparentées peuvent nécessiter une partition par groupe.
+- Vérifier que le dossier parent immédiat représente réellement la catégorie. Une image à la racine désactive les labels pour toute l’expérience ; les métriques supervisées deviennent indisponibles.
+- Examiner les clusters sélectionnés : effectifs, groupes minuscules, masques Zernike ratés, vecteurs nuls ou identiques et avertissements de convergence.
+- Conserver les métriques indéfinies comme indisponibles, contrôler les résultats par requête et la couverture, puis illustrer les réussites et les erreurs avec des images réelles.
+- Les scores de clustering exportés portent sur la galerie, qui sert aussi à choisir K : ce sont des diagnostics de galerie, pas une mesure de généralisation sur le test.
+- La recherche compare directement les requêtes à toute la galerie ; elle n’est pas restreinte au cluster prédit. Ses scores ne démontrent donc pas un gain dû au clustering.
+- La grille automatique est limitée à K=10. Pour étudier aussi K=12, fixer la grille **avant** de consulter le test, par exemple avec `--k-values 2 3 4 5 6 7 8 9 10 11 12`. Le nombre de catégories ne détermine toutefois pas automatiquement le meilleur K.
+- Ne pas sélectionner après coup la meilleure configuration sur le test. Les sept configurations peuvent être rapportées comme comparaison descriptive ; tout réglage ultérieur doit préserver un test indépendant.
+
 Le dataset réel d’environ 1 200 images et 12 catégories n’est pas fourni.
 
 1. Trier les chemins, dédupliquer les fichiers identiques par SHA256 et filtrer les images corrompues.
@@ -479,8 +590,6 @@ Prérequis : **Python 3.12, 64 bits**.
 ~~~bash
 git clone https://github.com/AHS0003/SimilarImage-Search-Clustering.git
 cd SimilarImage-Search-Clustering
-# Si le refactor n’est pas encore fusionné :
-git switch feature/classical-image-retrieval-evaluation
 python -m venv .venv
 ~~~
 
